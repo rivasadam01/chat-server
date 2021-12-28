@@ -1,7 +1,7 @@
 const User = require("../models").User;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const config = require("config");
+const { jwt_key } = require("../startup/config");
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -26,17 +26,19 @@ module.exports.login = async (req, res) => {
   }
 };
 
-module.exports.register = (req, res) => {
-  const { email, password } = req.body;
-
-  return res.send([email, password]);
+module.exports.register = async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    const token = generateToken(user.get({ raw: true }));
+    return res.send(token);
+  } catch (e) {
+    return res.status(400).send({ message: e.message });
+  }
 };
 
 const generateToken = (user) => {
-  const newUserObject = { ...user };
-  delete newUserObject.password;
-  const token = jwt.sign(newUserObject, config.get("jwt_key"), {
+  const token = jwt.sign(user, jwt_key, {
     expiresIn: "30m",
   });
-  return { ...newUserObject, ...{ token } };
+  return { ...user, ...{ token } };
 };

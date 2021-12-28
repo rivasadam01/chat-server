@@ -1,8 +1,12 @@
-const router=require('express').Router();
-const {login,register}=require('../controllers/auth');
+const router = require("express").Router();
+const { login, register } = require("../controllers/auth");
+const { rules: registrationRules } = require("../validators/auth/register");
+const { rules: loginRules } = require("../validators/auth/login");
+const { validate } = require("../validators");
 
-router.post('/login',login);
+//@ts-ignore
+router.post("/login", [loginRules, validate, login]);
+//@ts-ignore
+router.post("/register", [registrationRules, validate, register]);
 
-router.post('/register',register);
-
-module.exports=router;
+module.exports = router;
